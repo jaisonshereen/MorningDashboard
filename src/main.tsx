@@ -2,6 +2,7 @@ import React, {useEffect,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import {CalendarDays, Clock, Settings, Maximize, RefreshCw, Play, Images, ListTodo, Newspaper, X, Save} from 'lucide-react';
 import './style.css';
+import Smart from './Smart';
 type Item={title:string;detail?:string};
 type Briefing={updatedAt?:string;headlines?:string[];meetings?:Item[];tasks?:Item[];sections?:{title:string;items:string[]}[]};
 type Poster={id:string;url:string;name?:string};
@@ -28,4 +29,5 @@ return <div className="shell"><header><div><div className="eyebrow">PERSONAL COM
 {data.sections?.map((s,i)=><article className="widget" key={i}><div className="widgetTitle"><span><Newspaper size={18}/>{s.title}</span></div><div className="items">{s.items.map((item,j)=><div className="item" key={j}>{item}</div>)}</div></article>)}</div></main>
 <footer>MorningDashboard · Private access must be enforced by Cloudflare Access · {data.updatedAt?'Last feed update: '+data.updatedAt:'Demo mode'}</footer>
 {editing&&<div className="overlay" onMouseDown={e=>{if(e.target===e.currentTarget)setEditing(false)}}><div className="modal"><div className="modalHead"><h2>Dashboard settings</h2><button onClick={()=>setEditing(false)} aria-label="Close"><X size={20}/></button></div><label>YouTube URLs (one per line)<textarea value={draft.youtube.join('\n')} onChange={e=>setDraft({...draft,youtube:e.target.value.split('\n')})} rows={5}/></label><label>Ticker loop duration: {draft.tickerSpeed} seconds<input type="range" min="15" max="90" value={draft.tickerSpeed} onChange={e=>setDraft({...draft,tickerSpeed:Number(e.target.value)})}/></label><div className="switches">{([['showPosters','Poster gallery'],['showVideos','Video playlist'],['showMeetings','Meetings'],['showTasks','Priority tasks']] as const).map(([key,label])=><label key={key}><input type="checkbox" checked={draft[key]} onChange={e=>setDraft({...draft,[key]:e.target.checked})}/>{label}</label>)}</div><p className="hint">Settings are saved in this browser only. The Drive folder and briefing feeds are configured on the server.</p><button className="primary" onClick={save}><Save size={16}/> Save settings</button></div></div>}</div>}
-createRoot(document.getElementById('root')!).render(<App/>);
+function Root(){const [classic,setClassic]=useState(false);return classic?<><button onClick={()=>setClassic(false)}>Smart dashboard</button><App/></>:<Smart legacy={()=>setClassic(true)}/>}
+createRoot(document.getElementById('root')!).render(<Root/>);
