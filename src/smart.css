@@ -19,3 +19,5 @@
 .public-news-window{height:auto;min-height:24px;overflow:hidden}.public-news-track{display:flex;width:max-content;animation:public-horizontal linear infinite;will-change:transform}.public-news-track>div{display:flex;flex:none;align-items:center}.public-news-track p{white-space:nowrap;padding:4px 24px 4px 0;overflow-wrap:normal}.public-news-track p:after{content:' •';padding-left:24px;color:#94a3b8}@keyframes public-horizontal{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 
 .public-marquee .public-news-window{height:19px;min-height:0;border-bottom:1px solid #26354a}.public-marquee .public-news-track p{padding:2px 20px 2px 0;font-family:"Noto Sans Malayalam","Nirmala UI",system-ui,sans-serif;font-weight:600;line-height:15px}.public-marquee .public-news-window:nth-child(4),.public-marquee .public-news-window:nth-child(5){color:#dbeafe}
+
+.public-marquee .public-news-window:nth-child(6){color:#86efac}.public-marquee .public-news-window:nth-child(7){color:#fde68a}.public-marquee .public-news-window:nth-child(8){color:#c4b5fd}.public-marquee .public-news-window{height:17px}.public-marquee .public-news-track p{line-height:13px}
