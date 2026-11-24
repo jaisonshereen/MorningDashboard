@@ -23,7 +23,9 @@ export default function Smart({legacy}: {legacy:()=>void}){
  const days=sprintEnd&&!isNaN(Date.parse(sprintEnd))?Math.max(0,Math.ceil((Date.parse(sprintEnd)-now)/86400000)):null;
  const remaining=sprintStart&&sprintEnd?Math.max(0,Math.min(100,100*(Date.parse(sprintEnd)-now)/(Date.parse(sprintEnd)-Date.parse(sprintStart)))):0;
  const completion=stats.total?100*stats.closed/stats.total:0;
- const weather=d?.['breaking-news']?.weather;
+ const [liveWeather,setLiveWeather]=useState<any>(null);
+ useEffect(()=>{let active=true;async function refresh(){try{const res=await fetch('https://api.open-meteo.com/v1/forecast?latitude=12.83&longitude=77.65&hourly=precipitation_probability&timezone=Asia%2FKolkata&forecast_days=3');if(!res.ok)throw Error('Forecast unavailable');const j=await res.json();if(active)setLiveWeather({hours:j.hourly.time.map((time:string,i:number)=>({time:time+'+05:30',rainChance:j.hourly.precipitation_probability[i]}))})}catch{}}refresh();const timer=setInterval(refresh,1800000);return()=>{active=false;clearInterval(timer)}},[]);
+ const weather=liveWeather||d?.['breaking-news']?.weather;
  const agendaRef=React.useRef<HTMLDivElement>(null);
  useEffect(()=>{const el=agendaRef.current;if(!el)return;let pos=el.scrollTop,dir=1,hold=0;const timer=setInterval(()=>{if(el.matches(':hover')){pos=el.scrollTop;return}const max=el.scrollHeight-el.clientHeight;if(max<=0)return;if(hold>0){hold--;return}pos+=dir*.5;if(pos>=max||pos<=0){pos=Math.max(0,Math.min(max,pos));dir*=-1;hold=60}el.scrollTop=pos},40);return()=>clearInterval(timer)},[]);
  const start=(e:any)=>e.start?.dateTime||e.start||e.startTime||e.startAt;
