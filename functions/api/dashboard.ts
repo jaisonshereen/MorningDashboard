@@ -1,10 +1,10 @@
 // Discover designated children by name; never expose Drive credentials or arbitrary files.
 const b64=(v:Uint8Array)=>btoa(String.fromCharCode(...v)).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 const enc=(v:any)=>b64(new TextEncoder().encode(JSON.stringify(v)));
-async function token(env:any){
+async function token(env:any,write=false){
  const c=JSON.parse(env.GOOGLE_SERVICE_ACCOUNT_JSON),now=Math.floor(Date.now()/1000);
  const key=await crypto.subtle.importKey('pkcs8',Uint8Array.from(atob(c.private_key.replace(/-----BEGIN PRIVATE KEY-----|-----END PRIVATE KEY-----|\s/g,'')),x=>x.charCodeAt(0)),{name:'RSASSA-PKCS1-v1_5',hash:'SHA-256'},false,['sign']);
- const body=enc({alg:'RS256',typ:'JWT'})+'.'+enc({iss:c.client_email,scope:'https://www.googleapis.com/auth/drive.readonly',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3500});
+ const body=enc({alg:'RS256',typ:'JWT'})+'.'+enc({iss:c.client_email,scope:write?'https://www.googleapis.com/auth/drive':'https://www.googleapis.com/auth/drive.readonly',aud:'https://oauth2.googleapis.com/token',iat:now,exp:now+3500});
  const signature=b64(new Uint8Array(await crypto.subtle.sign('RSASSA-PKCS1-v1_5',key,new TextEncoder().encode(body))));
  const r=await fetch('https://oauth2.googleapis.com/token',{method:'POST',body:new URLSearchParams({grant_type:'urn:ietf:params:oauth:grant-type:jwt-bearer',assertion:body+'.'+signature})});if(!r.ok)throw Error('OAuth failed');return (await r.json() as any).access_token;
 }
@@ -24,3 +24,4 @@ export const onRequestGet=async ({env,request}:any)=>{
  return json(result);
  }catch{return json({error:'Dashboard source unavailable'},502)}
 };
+export const onRequestPost=async ({env,request}:any)=>{try{if(request.headers.get('Origin')!==new URL(request.url).origin)return json({error:'Invalid origin'},403);const body=await request.json() as any;const urls=body.youtubeUrls;if(!Array.isArray(urls)||urls.length>50||!urls.every((v:any)=>typeof v==='string'&&v.length<500&&/^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\//i.test(v)))return json({error:'Invalid YouTube URLs'},400);const t=await token(env,true),headers={Authorization:'Bearer '+t};const id='1wZbnlEG2mrLyy7P9qjpfS3A0I1KhUsVe';const old=await fetch('https://www.googleapis.com/drive/v3/files/'+id+'?alt=media',{headers});if(!old.ok)return json({error:'Settings read failed'},502);const config=await old.json() as any;const result=await fetch('https://www.googleapis.com/upload/drive/v3/files/'+id+'?uploadType=media',{method:'PATCH',headers:{...headers,'Content-Type':'application/json'},body:JSON.stringify({...config,youtubeUrls:urls})});if(!result.ok)return json({error:'Shared settings write failed; check Drive editor access'},502);return json({youtubeUrls:urls})}catch{return json({error:'Settings unavailable'},502)}};
